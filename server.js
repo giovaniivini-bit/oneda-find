@@ -76,30 +76,37 @@ async function searchCeA(query, targetGender, minPrice, maxPrice, size, color, s
         // Garantir que o produto tem SKUs
         if (!item.items || item.items.length === 0) return false;
         
-        // Obter disponibilidade do SKU padrão
-        const firstSku = item.items[0];
-        const offer = firstSku?.sellers?.[0]?.commertialOffer;
+        // Pelo menos um SKU deve estar em estoque e ter preço válido
+        const hasAvailableSku = item.items.some(sku => {
+          const offer = sku?.sellers?.[0]?.commertialOffer;
+          return offer && 
+                 offer.IsAvailable === true && 
+                 offer.AvailableQuantity > 0 && 
+                 offer.Price !== null && 
+                 offer.Price !== undefined;
+        });
         
-        if (!offer) return false;
-        
-        // Ignorar produtos fora de estoque / indisponíveis (evita lixo em cache)
-        if (offer.IsAvailable === false) return false;
-        if (offer.AvailableQuantity <= 0) return false;
-        if (offer.Price === null || offer.Price === undefined) return false;
-        
-        return true;
+        return hasAvailableSku;
       })
       .map(item => {
         const title = item.productName || '';
         const link = item.link || '';
         const description = item.metaTagDescription || item.description || 'Sem descrição detalhada.';
 
-        // Pegar SKU padrão (primeiro disponível)
-        const firstSku = item.items[0];
-        const image = firstSku?.images?.[0]?.imageUrl || '';
+        // Obter o primeiro SKU disponível para exibir os dados e preço corretos
+        const availableSku = item.items.find(sku => {
+          const offer = sku?.sellers?.[0]?.commertialOffer;
+          return offer && 
+                 offer.IsAvailable === true && 
+                 offer.AvailableQuantity > 0 && 
+                 offer.Price !== null && 
+                 offer.Price !== undefined;
+        }) || item.items[0];
+
+        const image = availableSku?.images?.[0]?.imageUrl || '';
         
         // Preço Comercial
-        const priceVal = firstSku?.sellers?.[0]?.commertialOffer?.Price;
+        const priceVal = availableSku?.sellers?.[0]?.commertialOffer?.Price || 0;
         const price = `R$ ${priceVal.toFixed(2).replace('.', ',')}`;
 
         // Detalhes extras
