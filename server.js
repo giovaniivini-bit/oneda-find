@@ -14,87 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- FUNÇÃO DE COMBINAÇÃO DE COR (Post-Filtering) ---
-function matchColor(product, selectedColor) {
-  if (!selectedColor) return true;
-  
-  const sel = selectedColor.toLowerCase();
-  const title = (product.title || '').toLowerCase();
-  
-  // 1. Tentar correspondência direta na especificação "Cor" do produto
-  const productColors = product.Cor || [];
-  if (Array.isArray(productColors) && productColors.length > 0) {
-    const matched = productColors.some(color => {
-      const col = color.toLowerCase();
-      if (sel === 'preto') {
-        return col.includes('preto') || col.includes('chumbo') || col.includes('cinza escuro') || col.includes('grafite');
-      }
-      if (sel === 'branco') {
-        return col.includes('branco') || col.includes('white') || col.includes('off') || col.includes('natural');
-      }
-      if (sel === 'azul') {
-        return col.includes('azul') || col.includes('jeans') || col.includes('marinho') || col.includes('celeste');
-      }
-      if (sel === 'vermelho') {
-        return col.includes('vermelho') || col.includes('vinho') || col.includes('bordô') || col.includes('cereja') || col.includes('carmim');
-      }
-      if (sel === 'verde') {
-        return col.includes('verde') || col.includes('militar') || col.includes('oliva') || col.includes('musgo');
-      }
-      if (sel === 'amarelo') {
-        return col.includes('amarelo') || col.includes('mostarda') || col.includes('ouro');
-      }
-      if (sel === 'rosa') {
-        return col.includes('rosa') || col.includes('pink') || col.includes('rose') || col.includes('chiclete');
-      }
-      if (sel === 'bege') {
-        return col.includes('bege') || col.includes('creme') || col.includes('areia') || col.includes('caqui') || col.includes('nude') || col.includes('marfim');
-      }
-      if (sel === 'cinza') {
-        return col.includes('cinza') || col.includes('chumbo') || col.includes('silver') || col.includes('mescla') || col.includes('grafite');
-      }
-      if (sel === 'marrom') {
-        return col.includes('marrom') || col.includes('cafe') || col.includes('café') || col.includes('caramelo') || col.includes('terracota') || col.includes('bronze');
-      }
-      return col.includes(sel);
-    });
-    if (matched) return true;
-  }
-  
-  // 2. Fallback para correspondência no título do produto
-  if (sel === 'preto') {
-    return title.includes('preto') || title.includes('preta') || title.includes('chumbo') || title.includes('cinza escuro') || title.includes('grafite');
-  }
-  if (sel === 'branco') {
-    return title.includes('branco') || title.includes('branca') || title.includes('white') || title.includes('off') || title.includes('natural');
-  }
-  if (sel === 'azul') {
-    return title.includes('azul') || title.includes('jeans') || title.includes('marinho');
-  }
-  if (sel === 'vermelho') {
-    return title.includes('vermelho') || title.includes('vermelha') || title.includes('vinho') || title.includes('bordô') || title.includes('cereja');
-  }
-  if (sel === 'verde') {
-    return title.includes('verde') || title.includes('militar') || title.includes('oliva');
-  }
-  if (sel === 'amarelo') {
-    return title.includes('amarelo') || title.includes('amarela') || title.includes('mostarda');
-  }
-  if (sel === 'rosa') {
-    return title.includes('rosa') || title.includes('pink') || title.includes('rose');
-  }
-  if (sel === 'bege') {
-    return title.includes('bege') || title.includes('creme') || title.includes('areia') || title.includes('caqui') || title.includes('nude');
-  }
-  if (sel === 'cinza') {
-    return title.includes('cinza') || title.includes('chumbo') || title.includes('silver') || title.includes('mescla');
-  }
-  if (sel === 'marrom') {
-    return title.includes('marrom') || title.includes('cafe') || title.includes('café') || title.includes('caramelo') || title.includes('terracota');
-  }
-  
-  return title.includes(sel);
-}
+
 
 // --- PESQUISA C&A ---
 async function searchCeA(query, targetGender, minPrice, maxPrice, size, color, sort, from, to) {
@@ -219,19 +139,25 @@ app.get('/api/search', async (req, res) => {
     const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
     const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
     const size = req.query.size || '';
-    const color = req.query.color || '';
+    const category = req.query.category || '';
     const sort = req.query.sort || '';
     const page = req.query.page ? parseInt(req.query.page) : 1;
 
     const pageSize = 24;
-    const apiPageSize = 48; // Solicitamos um lote maior para compensar a filtragem dupla em memória (Cor + Gênero)
+    const apiPageSize = 36; // Solicitamos um lote ligeiramente maior caso haja filtragem por gênero
     const from = (page - 1) * pageSize;
     const to = from + apiPageSize - 1;
 
-    // Se o termo estiver vazio, usamos "moda" como termo padrão para listar produtos
-    const searchTerm = query.trim() || 'moda';
+    // Se o termo estiver vazio, usamos a categoria como termo principal.
+    // Se ambos estiverem vazios, usamos "moda" como padrão.
+    let searchTerm = query.trim();
+    if (!searchTerm) {
+      searchTerm = category ? category : 'moda';
+    } else if (category) {
+      searchTerm = `${searchTerm} ${category}`;
+    }
 
-    // Mapear o gênero para enriquecer a query de busca textual
+    // Mapear o gênero para enriquecer a query de busca
     let genderTerm = '';
     if (gender === 'masculino') genderTerm = ' masculino';
     else if (gender === 'feminino') genderTerm = ' feminino';
@@ -239,25 +165,15 @@ app.get('/api/search', async (req, res) => {
     else if (gender === 'menina') genderTerm = ' infantil menina';
     else if (gender === 'bebe') genderTerm = ' bebe';
 
-    // Mapear a cor para enriquecer a busca textual (já que o specificationFilter_47 está desativado)
-    let colorTerm = '';
-    if (color) {
-      colorTerm = ` ${color.toLowerCase()}`;
-    }
+    const fullQuery = `${searchTerm}${genderTerm}`;
 
-    const fullQuery = `${searchTerm}${genderTerm}${colorTerm}`;
+    const rawProducts = await searchCeA(fullQuery, gender, minPrice, maxPrice, size, '', sort, from, to);
 
-    const rawProducts = await searchCeA(fullQuery, gender, minPrice, maxPrice, size, color, sort, from, to);
-
-    // 1. Filtragem pós-busca em memória para garantir precisão máxima de cor
     let filteredProducts = rawProducts;
-    if (color) {
-      filteredProducts = rawProducts.filter(product => matchColor(product, color));
-    }
 
-    // 2. Filtragem pós-busca em memória para garantir precisão estrita de gênero (Evita menino retornar menina)
+    // Filtragem pós-busca em memória para garantir precisão estrita de gênero (Evita menino retornar menina)
     if (gender) {
-      filteredProducts = filteredProducts.filter(product => {
+      filteredProducts = rawProducts.filter(product => {
         const productGenders = (product.Genero || []).map(g => g.toLowerCase());
         const target = gender.toLowerCase();
         

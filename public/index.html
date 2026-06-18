@@ -73,7 +73,6 @@
               <label for="gender-baby"><i class="fa-solid fa-baby"></i> Bebê</label>
             </div>
           </div>
-
           <!-- Tamanho (Especificação 46) -->
           <div class="input-group">
             <label>Tamanho</label>
@@ -83,6 +82,15 @@
               <span class="size-btn" data-value="M">M</span>
               <span class="size-btn" data-value="G">G</span>
               <span class="size-btn" data-value="GG">GG</span>
+              <span class="size-btn size-kids" data-value="1">1</span>
+              <span class="size-btn size-kids" data-value="2">2</span>
+              <span class="size-btn size-kids" data-value="3">3</span>
+              <span class="size-btn size-kids" data-value="4">4</span>
+              <span class="size-btn size-kids" data-value="5">5</span>
+              <span class="size-btn size-kids" data-value="6">6</span>
+              <span class="size-btn size-kids" data-value="8">8</span>
+              <span class="size-btn size-kids" data-value="10">10</span>
+              <span class="size-btn size-kids" data-value="12">12</span>
               <span class="size-btn" data-value="36">36</span>
               <span class="size-btn" data-value="38">38</span>
               <span class="size-btn" data-value="40">40</span>
@@ -92,49 +100,50 @@
             </div>
           </div>
 
-          <!-- Cor (Especificação 47) -->
+          <!-- Faixa de Preço (Min/Max com badges) -->
           <div class="input-group">
-            <label>Cor</label>
-            <div class="color-selector-palette" id="color-selector">
-              <span class="color-btn" data-value="Preto" style="background-color: #000000;" title="Preto"></span>
-              <span class="color-btn" data-value="Branco" style="background-color: #ffffff; border: 1px solid #555555;" title="Branco"></span>
-              <span class="color-btn" data-value="Azul" style="background-color: #1d4ed8;" title="Azul"></span>
-              <span class="color-btn" data-value="Vermelho" style="background-color: #b91c1c;" title="Vermelho"></span>
-              <span class="color-btn" data-value="Verde" style="background-color: #15803d;" title="Verde"></span>
-              <span class="color-btn" data-value="Amarelo" style="background-color: #eab308;" title="Amarelo"></span>
-              <span class="color-btn" data-value="Rosa" style="background-color: #db2777;" title="Rosa"></span>
-              <span class="color-btn" data-value="Bege" style="background-color: #d1c7bd;" title="Bege"></span>
-              <span class="color-btn" data-value="Cinza" style="background-color: #4b5563;" title="Cinza"></span>
-              <span class="color-btn" data-value="Marrom" style="background-color: #7c2d12;" title="Marrom"></span>
-            </div>
-          </div>
-
-          <!-- Faixa de Preço -->
-          <div class="input-group">
-            <label>Faixa de Preço Máxima</label>
-            <div class="price-range-container">
-              <div class="price-inputs">
-                <span>R$ 0</span>
-                <span id="price-val">R$ 500</span>
+            <label>Faixa de Preço (R$)</label>
+            <div class="price-inputs-row">
+              <div class="price-input-box">
+                <span>Mínimo</span>
+                <input type="number" id="price-min" min="0" placeholder="0">
               </div>
-              <input type="range" id="price-slider" min="0" max="1000" step="10" value="500">
+              <div class="price-input-box">
+                <span>Máximo</span>
+                <input type="number" id="price-max" min="0" placeholder="Sem limite">
+              </div>
+            </div>
+            <div class="price-quick-tags">
+              <span class="price-badge" data-min="39" data-max="40">R$ 39,90</span>
+              <span class="price-badge" data-min="49" data-max="50">R$ 49,90</span>
+              <span class="price-badge" data-min="59" data-max="60">R$ 59,90</span>
+              <span class="price-badge" data-min="0" data-max="40">Até R$ 40</span>
+              <span class="price-badge" data-min="0" data-max="50">Até R$ 50</span>
             </div>
           </div>
 
-          <!-- Ordenação -->
+          <!-- Categoria de Produto -->
           <div class="input-group">
-            <label for="sort-select">Ordenar por</label>
-            <div class="sort-box">
-              <i class="fa-solid fa-sort-down"></i>
-              <select id="sort-select">
-                <option value="OrderByTopSaleDESC" selected>Mais Vendidos / Relevância</option>
-                <option value="OrderByPriceASC">Menor Preço</option>
-                <option value="OrderByPriceDESC">Maior Preço</option>
-                <option value="OrderByBestDiscountDESC">Melhores Descontos</option>
-                <option value="OrderByReleaseDateDESC">Lançamentos</option>
+            <label for="category-select">Categoria de Produto</label>
+            <div class="category-box">
+              <i class="fa-solid fa-tags"></i>
+              <select id="category-select">
+                <option value="" selected>Todas as Categorias</option>
+                <option value="camiseta">Camisetas</option>
+                <option value="calca">Calças</option>
+                <option value="jeans">Jeans</option>
+                <option value="vestido">Vestidos</option>
+                <option value="casaco">Casacos & Jaquetas</option>
+                <option value="short">Shorts & Bermudas</option>
+                <option value="blusa">Blusas & Camisas</option>
+                <option value="saia">Saias</option>
+                <option value="calcado">Calçados</option>
+                <option value="pijama">Pijamas & Moda Íntima</option>
               </select>
             </div>
           </div>
+
+
 
           <button type="submit" class="btn-search">
             <span class="btn-text">Pesquisar Catálogo</span>
@@ -146,7 +155,12 @@
       <!-- Grid de Resultados -->
       <section class="results-panel">
         <div class="results-header">
-          <h2 class="section-title"><i class="fa-solid fa-shirt"></i> Catálogo de Produtos</h2>
+          <div class="header-main-row">
+            <h2 class="section-title"><i class="fa-solid fa-shirt"></i> Catálogo de Produtos</h2>
+            <button id="btn-print" class="btn-print" type="button" title="Imprimir Relatório ou Salvar como PDF">
+              <i class="fa-solid fa-file-pdf"></i> PDF / Imprimir
+            </button>
+          </div>
           <div class="meta-info" id="meta-info">
             <!-- Informação de tempo e contagem inserida via JS -->
           </div>

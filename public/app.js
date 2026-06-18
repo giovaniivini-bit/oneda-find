@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   const searchForm = document.getElementById('search-form');
   const searchInput = document.getElementById('search-input');
-  const priceSlider = document.getElementById('price-slider');
-  const priceVal = document.getElementById('price-val');
+  const priceMinInput = document.getElementById('price-min');
+  const priceMaxInput = document.getElementById('price-max');
+  const categorySelect = document.getElementById('category-select');
+  const btnPrint = document.getElementById('btn-print');
   const productsGrid = document.getElementById('products-grid');
   
   const emptyState = document.getElementById('empty-state');
@@ -29,19 +31,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Estado local do filtro e paginação
   let selectedSize = '';
-  let selectedColor = '';
   let currentPage = 1;
   let accumulatedProductsCount = 0;
 
-  // Atualizar exibição do slider de preço
-  priceSlider.addEventListener('input', (e) => {
-    const val = e.target.value;
-    if (val == 1000) {
-      priceVal.textContent = 'Sem Limite';
-    } else {
-      priceVal.textContent = `R$ ${val}`;
-    }
+  // Tratar cliques nos badges rápidos de preço
+  const priceBadges = document.querySelectorAll('.price-badge');
+  priceBadges.forEach(badge => {
+    badge.addEventListener('click', () => {
+      if (badge.classList.contains('active')) {
+        badge.classList.remove('active');
+        priceMinInput.value = '';
+        priceMaxInput.value = '';
+      } else {
+        priceBadges.forEach(b => b.classList.remove('active'));
+        badge.classList.add('active');
+        priceMinInput.value = badge.dataset.min || '';
+        priceMaxInput.value = badge.dataset.max || '';
+        // Disparar a submissão de busca automática
+        searchForm.dispatchEvent(new Event('submit'));
+      }
+    });
   });
+
+  // Evento do Botão Imprimir (PDF)
+  if (btnPrint) {
+    btnPrint.addEventListener('click', () => {
+      window.print();
+    });
+  }
 
   // Fechar Modal
   modalClose.addEventListener('click', () => {
@@ -65,21 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sizeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedSize = btn.dataset.value;
-      }
-    });
-  });
-
-  // --- CONTROLES DE COR (Paleta) ---
-  const colorBtns = document.querySelectorAll('.color-btn');
-  colorBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (btn.classList.contains('active')) {
-        btn.classList.remove('active');
-        selectedColor = '';
-      } else {
-        colorBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedColor = btn.dataset.value;
       }
     });
   });
@@ -116,10 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const genderEl = document.querySelector('input[name="gender"]:checked');
     const gender = genderEl ? genderEl.value : '';
     
-    const maxPriceVal = priceSlider.value;
-    const maxPrice = maxPriceVal == 1000 ? '' : maxPriceVal;
-
-    const sort = document.getElementById('sort-select').value;
+    const minPrice = priceMinInput.value.trim();
+    const maxPrice = priceMaxInput.value.trim();
+    const category = categorySelect ? categorySelect.value : '';
+    const sort = '';
 
     if (!append) {
       emptyState.style.display = 'none';
@@ -139,13 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams({
         q: query,
         gender: gender,
-        page: currentPage,
-        sort: sort
+        page: currentPage
       });
 
+      if (minPrice) params.append('minPrice', minPrice);
       if (maxPrice) params.append('maxPrice', maxPrice);
       if (selectedSize) params.append('size', selectedSize);
-      if (selectedColor) params.append('color', selectedColor);
+      if (category) params.append('category', category);
 
       const response = await fetch(`/api/search?${params.toString()}`);
       if (!response.ok) {
