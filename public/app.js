@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const metaInfo = document.getElementById('meta-info');
   const btnSearch = document.querySelector('.btn-search');
 
+  // Novos elementos de paginação e filtros
+  const paginationContainer = document.getElementById('pagination-container');
+  const btnLoadMore = document.getElementById('btn-load-more');
+  const loadMoreLoader = document.querySelector('.load-more-loader');
+  const loadMoreText = document.querySelector('.load-more-text');
+
   // Modal
   const productModal = document.getElementById('product-modal');
   const modalClose = document.getElementById('modal-close');
@@ -20,6 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalDescription = document.getElementById('modal-description');
   const modalCharacteristics = document.getElementById('modal-characteristics');
   const modalLink = document.getElementById('modal-link');
+
+  // Estado local do filtro e paginação
+  let selectedSize = '';
+  let selectedColor = '';
+  let currentPage = 1;
+  let accumulatedProductsCount = 0;
 
   // Atualizar exibição do slider de preço
   priceSlider.addEventListener('input', (e) => {
@@ -42,13 +54,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Submissão de Busca
+  // --- CONTROLES DE TAMANHO (Grade de Botões) ---
+  const sizeBtns = document.querySelectorAll('.size-btn');
+  sizeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        selectedSize = '';
+      } else {
+        sizeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedSize = btn.dataset.value;
+      }
+    });
+  });
+
+  // --- CONTROLES DE COR (Paleta) ---
+  const colorBtns = document.querySelectorAll('.color-btn');
+  colorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        selectedColor = '';
+      } else {
+        colorBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedColor = btn.dataset.value;
+      }
+    });
+  });
+
+  // --- CONTROLES DE BADGES RÁPIDAS (Tags) ---
+  const badgeTags = document.querySelectorAll('.badge-tag');
+  badgeTags.forEach(tag => {
+    tag.addEventListener('click', () => {
+      searchInput.value = tag.dataset.value;
+      // Disparar a submissão de busca
+      searchForm.dispatchEvent(new Event('submit'));
+    });
+  });
+
+  // --- SUBMISSÃO DO FORMULÁRIO DE BUSCA ---
   searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    currentPage = 1;
+    accumulatedProductsCount = 0;
+    await fetchProducts(false); // false = não anexa, substitui
+  });
 
+  // --- BOTÃO DE PAGINAÇÃO (CARREGAR MAIS) ---
+  btnLoadMore.addEventListener('click', async () => {
+    currentPage++;
+    await fetchProducts(true); // true = anexa resultados
+  });
+
+  // --- BUSCAR PRODUTOS ---
+  async function fetchProducts(append = false) {
     const query = searchInput.value.trim();
-    if (!query) return;
-
+    
     // Obter filtros
     const genderEl = document.querySelector('input[name="gender"]:checked');
     const gender = genderEl ? genderEl.value : '';
@@ -56,32 +119,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxPriceVal = priceSlider.value;
     const maxPrice = maxPriceVal == 1000 ? '' : maxPriceVal;
 
-    // Obter lojas selecionadas
-    const stores = [];
-    if (document.getElementById('store-renner').checked) stores.push('renner');
-    if (document.getElementById('store-cea').checked) stores.push('cea');
-    if (document.getElementById('store-zara').checked) stores.push('zara');
+    const sort = document.getElementById('sort-select').value;
 
-    if (stores.length === 0) {
-      alert('Selecione pelo menos uma loja para buscar!');
-      return;
+    if (!append) {
+      emptyState.style.display = 'none';
+      productsGrid.style.display = 'none';
+      loadingState.style.display = 'grid';
+      btnSearch.classList.add('loading');
+      metaInfo.innerHTML = '';
+      paginationContainer.style.display = 'none';
+      productsGrid.innerHTML = '';
+    } else {
+      btnLoadMore.disabled = true;
+      loadMoreLoader.style.display = 'inline-block';
+      loadMoreText.textContent = 'Carregando mais...';
     }
 
-    // Configurar estados de UI
-    emptyState.style.display = 'none';
-    productsGrid.style.display = 'none';
-    loadingState.style.display = 'grid';
-    btnSearch.classList.add('loading');
-    metaInfo.innerHTML = '';
-
     try {
-      // Construir URL de busca
       const params = new URLSearchParams({
         q: query,
         gender: gender,
-        stores: stores.join(',')
+        page: currentPage,
+        sort: sort
       });
+
       if (maxPrice) params.append('maxPrice', maxPrice);
+      if (selectedSize) params.append('size', selectedSize);
+      if (selectedColor) params.append('color', selectedColor);
 
       const response = await fetch(`/api/search?${params.toString()}`);
       if (!response.ok) {
@@ -89,56 +153,78 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      renderProducts(data.products, data.timestamp);
+      renderProducts(data.products, data.timestamp, append);
 
     } catch (err) {
       console.error(err);
-      productsGrid.innerHTML = '';
-      emptyState.style.display = 'flex';
-      emptyState.innerHTML = `
-        <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
-        <h3>Erro ao buscar produtos</h3>
-        <p>Não foi possível conectar com os servidores de busca no momento. Por favor, tente novamente.</p>
-      `;
+      if (!append) {
+        productsGrid.innerHTML = '';
+        emptyState.style.display = 'flex';
+        emptyState.innerHTML = `
+          <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
+          <h3>Erro ao buscar produtos</h3>
+          <p>Não foi possível conectar com os servidores de busca da C&A no momento. Por favor, tente novamente.</p>
+        `;
+      } else {
+        alert('Erro ao carregar mais produtos. Por favor, tente novamente.');
+      }
     } finally {
-      loadingState.style.display = 'none';
-      btnSearch.classList.remove('loading');
+      if (!append) {
+        loadingState.style.display = 'none';
+        btnSearch.classList.remove('loading');
+      } else {
+        btnLoadMore.disabled = false;
+        loadMoreLoader.style.display = 'none';
+        loadMoreText.textContent = 'Carregando Mais Produtos';
+      }
     }
-  });
+  }
 
-  // Renderizar produtos no Grid
-  function renderProducts(products, timestamp) {
-    productsGrid.innerHTML = '';
-    
+  // --- RENDERIZAR PRODUTOS ---
+  function renderProducts(products, timestamp, append = false) {
+    if (!append) {
+      productsGrid.innerHTML = '';
+    }
+
     if (!products || products.length === 0) {
-      productsGrid.style.display = 'none';
-      emptyState.style.display = 'flex';
-      emptyState.innerHTML = `
-        <i class="fa-solid fa-magnifying-glass-minus"></i>
-        <h3>Nenhum produto encontrado</h3>
-        <p>Tente mudar o termo de busca ou ajustar a faixa de preço e os filtros de gênero.</p>
-      `;
-      metaInfo.innerHTML = `Busca finalizada às <span>${timestamp}</span> • <span>0</span> produtos`;
+      if (!append) {
+        productsGrid.style.display = 'none';
+        emptyState.style.display = 'flex';
+        emptyState.innerHTML = `
+          <i class="fa-solid fa-magnifying-glass-minus"></i>
+          <h3>Nenhum produto encontrado</h3>
+          <p>Tente mudar o termo de busca ou ajustar a faixa de preço e os filtros de tamanho e cor.</p>
+        `;
+        metaInfo.innerHTML = `Busca finalizada às <span>${timestamp}</span> • <span>0</span> produtos`;
+        paginationContainer.style.display = 'none';
+      } else {
+        // Se já tinha produtos e o "carregar mais" veio vazio
+        paginationContainer.style.display = 'none';
+        const endMessage = document.createElement('div');
+        endMessage.className = 'end-of-catalog-message';
+        endMessage.style.cssText = 'grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 1rem;';
+        endMessage.textContent = 'Fim dos resultados para esta busca.';
+        productsGrid.appendChild(endMessage);
+      }
       return;
     }
 
     emptyState.style.display = 'none';
     productsGrid.style.display = 'grid';
 
-    // Escrever metadados
-    metaInfo.innerHTML = `Busca finalizada às <span>${timestamp}</span> • Encontrados <span>${products.length}</span> produtos`;
+    accumulatedProductsCount += products.length;
+    metaInfo.innerHTML = `Busca finalizada às <span>${timestamp}</span> • Exibindo <span>${accumulatedProductsCount}</span> produtos`;
 
     products.forEach(product => {
       const card = document.createElement('div');
       card.className = 'product-card';
       
-      // Fallback de imagem caso dê erro ao carregar ou esteja vazia
       const displayImage = product.image || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=400&auto=format&fit=crop';
 
       card.innerHTML = `
         <div class="product-image-container">
           <img src="${displayImage}" alt="${product.title}" onerror="this.src='https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=400&auto=format&fit=crop'">
-          <span class="store-badge ${product.store.toLowerCase().replace('&', '')}">${product.store}</span>
+          <span class="store-badge cea">${product.store}</span>
         </div>
         <div class="product-info">
           <h3 class="product-title">${product.title}</h3>
@@ -153,21 +239,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
       productsGrid.appendChild(card);
     });
+
+    // Se vieram exatamente 24 produtos (tamanho da página no backend),
+    // indica que pode haver mais registros no catálogo da C&A. Exibe a paginação.
+    if (products.length === 24) {
+      paginationContainer.style.display = 'flex';
+    } else {
+      paginationContainer.style.display = 'none';
+    }
   }
 
-  // Abrir Modal com detalhes
+  // --- ABRIR MODAL DE DETALHES ---
   function openModal(product, image) {
     modalImage.src = image;
     modalStore.textContent = product.store;
     
-    // Classes de cores para a badge da loja no modal
-    modalStore.className = 'modal-store-badge';
-    modalStore.classList.add(product.store.toLowerCase().replace('&', ''));
+    modalStore.className = 'modal-store-badge cea';
     
     modalTitle.textContent = product.title;
     modalPrice.textContent = product.price;
-    modalDescription.textContent = product.description || 'Nenhuma descrição detalhada disponível para este produto.';
-    modalCharacteristics.textContent = product.characteristics || 'Características gerais de moda.';
+    modalDescription.textContent = product.description || 'Nenhuma descrição detalhada disponível.';
+    modalCharacteristics.textContent = product.characteristics || 'Características gerais de moda C&A.';
     modalLink.href = product.link || '#';
 
     productModal.style.display = 'block';

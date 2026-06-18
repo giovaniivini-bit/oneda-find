@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Localizador de Moda Real-time - Compare preços na Renner, C&A e Zara">
-  <title>Oneda Find | Localizador de Moda Premium</title>
+  <meta name="description" content="Oneda Find - Catálogo e Filtros de Moda Exclusivos C&A em Tempo Real">
+  <title>Oneda Find | Catálogo C&A</title>
   <!-- Google Fonts: Outfit (Heading) e Inter (Body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
         <i class="fa-solid fa-gem glow-icon"></i>
         <h1>Oneda<span>Find</span></h1>
       </div>
-      <p class="subtitle">O seu agregador inteligente de moda em tempo real</p>
+      <p class="subtitle">Catálogo de Moda C&A em Tempo Real</p>
     </header>
 
     <main class="main-content">
@@ -35,36 +35,24 @@
         <form id="search-form">
           <!-- Busca por produto -->
           <div class="input-group">
-            <label for="search-input">O que você está procurando?</label>
+            <label for="search-input">O que você procura na C&A?</label>
             <div class="search-box">
-              <i class="fa-solid fa-tag"></i>
-              <select id="search-input" required>
-                <option value="moda" selected>Todos os produtos</option>
-                <option value="camiseta">Camiseta</option>
-                <option value="top">Top</option>
-                <option value="conjunto">Conjunto</option>
-                <option value="top manga longa">Top Manga Longa</option>
-                <option value="blazer">Blazer</option>
-                <option value="vestido">Vestido</option>
-                <option value="calça">Calça</option>
-                <option value="bermuda">Bermuda</option>
-                <option value="casaco">Casaco</option>
-                <option value="suéter">Suéter</option>
-                <option value="pijama">Pijama</option>
-                <option value="jaqueta">Jaqueta</option>
-                <option value="body">Body</option>
-                <option value="blusa">Blusa</option>
-                <option value="saia">Saia</option>
-                <option value="macacão">Macacão</option>
-                <option value="cropped">Cropped</option>
-                <option value="short">Short</option>
-              </select>
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-input" placeholder="Ex: camiseta, calça, vestido..." required>
+            </div>
+            <div class="quick-tags">
+              <span class="badge-tag" data-value="camiseta">Camisetas</span>
+              <span class="badge-tag" data-value="jeans">Jeans</span>
+              <span class="badge-tag" data-value="vestido">Vestidos</span>
+              <span class="badge-tag" data-value="casaco">Casacos</span>
+              <span class="badge-tag" data-value="short">Shorts</span>
+              <span class="badge-tag" data-value="blusa">Blusas</span>
             </div>
           </div>
 
           <!-- Gênero -->
           <div class="input-group">
-            <label>Gênero</label>
+            <label>Gênero / Categoria</label>
             <div class="gender-selector">
               <input type="radio" id="gender-all" name="gender" value="" checked>
               <label for="gender-all"><i class="fa-solid fa-users"></i> Todos</label>
@@ -80,6 +68,44 @@
 
               <input type="radio" id="gender-girl" name="gender" value="menina">
               <label for="gender-girl"><i class="fa-solid fa-child-dress"></i> Menina</label>
+
+              <input type="radio" id="gender-baby" name="gender" value="bebe">
+              <label for="gender-baby"><i class="fa-solid fa-baby"></i> Bebê</label>
+            </div>
+          </div>
+
+          <!-- Tamanho (Especificação 46) -->
+          <div class="input-group">
+            <label>Tamanho</label>
+            <div class="size-selector-grid" id="size-selector">
+              <span class="size-btn" data-value="PP">PP</span>
+              <span class="size-btn" data-value="P">P</span>
+              <span class="size-btn" data-value="M">M</span>
+              <span class="size-btn" data-value="G">G</span>
+              <span class="size-btn" data-value="GG">GG</span>
+              <span class="size-btn" data-value="36">36</span>
+              <span class="size-btn" data-value="38">38</span>
+              <span class="size-btn" data-value="40">40</span>
+              <span class="size-btn" data-value="42">42</span>
+              <span class="size-btn" data-value="44">44</span>
+              <span class="size-btn" data-value="46">46</span>
+            </div>
+          </div>
+
+          <!-- Cor (Especificação 47) -->
+          <div class="input-group">
+            <label>Cor</label>
+            <div class="color-selector-palette" id="color-selector">
+              <span class="color-btn" data-value="Preto" style="background-color: #000000;" title="Preto"></span>
+              <span class="color-btn" data-value="Branco" style="background-color: #ffffff; border: 1px solid #555555;" title="Branco"></span>
+              <span class="color-btn" data-value="Azul" style="background-color: #1d4ed8;" title="Azul"></span>
+              <span class="color-btn" data-value="Vermelho" style="background-color: #b91c1c;" title="Vermelho"></span>
+              <span class="color-btn" data-value="Verde" style="background-color: #15803d;" title="Verde"></span>
+              <span class="color-btn" data-value="Amarelo" style="background-color: #eab308;" title="Amarelo"></span>
+              <span class="color-btn" data-value="Rosa" style="background-color: #db2777;" title="Rosa"></span>
+              <span class="color-btn" data-value="Bege" style="background-color: #d1c7bd;" title="Bege"></span>
+              <span class="color-btn" data-value="Cinza" style="background-color: #4b5563;" title="Cinza"></span>
+              <span class="color-btn" data-value="Marrom" style="background-color: #7c2d12;" title="Marrom"></span>
             </div>
           </div>
 
@@ -95,27 +121,23 @@
             </div>
           </div>
 
-          <!-- Lojas -->
+          <!-- Ordenação -->
           <div class="input-group">
-            <label>Grandes Magazines</label>
-            <div class="stores-container">
-              <div class="store-checkbox">
-                <input type="checkbox" id="store-renner" value="renner" checked>
-                <label for="store-renner">Lojas Renner</label>
-              </div>
-              <div class="store-checkbox">
-                <input type="checkbox" id="store-cea" value="cea" checked>
-                <label for="store-cea">C&A</label>
-              </div>
-              <div class="store-checkbox">
-                <input type="checkbox" id="store-zara" value="zara" checked>
-                <label for="store-zara">Zara</label>
-              </div>
+            <label for="sort-select">Ordenar por</label>
+            <div class="sort-box">
+              <i class="fa-solid fa-sort-down"></i>
+              <select id="sort-select">
+                <option value="OrderByTopSaleDESC" selected>Mais Vendidos / Relevância</option>
+                <option value="OrderByPriceASC">Menor Preço</option>
+                <option value="OrderByPriceDESC">Maior Preço</option>
+                <option value="OrderByBestDiscountDESC">Melhores Descontos</option>
+                <option value="OrderByReleaseDateDESC">Lançamentos</option>
+              </select>
             </div>
           </div>
 
           <button type="submit" class="btn-search">
-            <span class="btn-text">Pesquisar Catálogos</span>
+            <span class="btn-text">Pesquisar Catálogo</span>
             <i class="fa-solid fa-circle-notch fa-spin btn-loader"></i>
           </button>
         </form>
@@ -124,7 +146,7 @@
       <!-- Grid de Resultados -->
       <section class="results-panel">
         <div class="results-header">
-          <h2 class="section-title"><i class="fa-solid fa-shirt"></i> Resultados Encontrados</h2>
+          <h2 class="section-title"><i class="fa-solid fa-shirt"></i> Catálogo de Produtos</h2>
           <div class="meta-info" id="meta-info">
             <!-- Informação de tempo e contagem inserida via JS -->
           </div>
@@ -134,7 +156,7 @@
         <div class="empty-state" id="empty-state">
           <i class="fa-solid fa-bag-shopping"></i>
           <h3>Pronto para buscar</h3>
-          <p>Digite o que procura, selecione os filtros e explore os maiores catálogos de moda do país com dados 100% atualizados.</p>
+          <p>Digite o que procura, filtre por cor, tamanho ou preço e explore o catálogo oficial da C&A em tempo real.</p>
         </div>
 
         <div class="loading-state" id="loading-state">
@@ -147,6 +169,14 @@
 
         <!-- Grid de Cards de Roupas -->
         <div class="products-grid" id="products-grid"></div>
+
+        <!-- Paginação -->
+        <div class="pagination-container" id="pagination-container" style="display: none;">
+          <button class="btn-load-more" id="btn-load-more">
+            <span class="load-more-text">Carregar Mais Produtos</span>
+            <i class="fa-solid fa-spinner fa-spin load-more-loader" style="display: none;"></i>
+          </button>
+        </div>
       </section>
     </main>
 
@@ -159,7 +189,7 @@
             <img id="modal-image" src="" alt="Produto">
           </div>
           <div class="modal-info">
-            <span class="modal-store-badge" id="modal-store">LOJA</span>
+            <span class="modal-store-badge cea" id="modal-store">C&A</span>
             <h2 id="modal-title">Título do Produto</h2>
             <h3 class="modal-price" id="modal-price">R$ 00,00</h3>
             
@@ -174,7 +204,7 @@
             </div>
 
             <a href="#" id="modal-link" target="_blank" class="btn-buy">
-              <span>Ir para a Loja Oficial</span>
+              <span>Ver na Loja Oficial C&A</span>
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </a>
           </div>
@@ -183,7 +213,7 @@
     </div>
 
     <footer class="app-footer">
-      <p>&copy; 2026 Oneda Find. Dados consultados em tempo real direto nas lojas.</p>
+      <p>&copy; 2026 Oneda Find. Dados de catálogo sincronizados em tempo real direto com a C&A.</p>
     </footer>
   </div>
 
