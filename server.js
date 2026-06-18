@@ -141,43 +141,69 @@ async function searchCeA(query, targetGender, minPrice, maxPrice, size, color, s
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
+        // Evitar cache intermediário para sempre obter dados atualizados em tempo real
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       },
       timeout: 10000
     });
 
     if (!Array.isArray(response.data)) return [];
 
-    return response.data.map(item => {
-      const title = item.productName || '';
-      const link = item.link || '';
-      const description = item.metaTagDescription || item.description || 'Sem descrição detalhada.';
+    return response.data
+      .filter(item => {
+        // Garantir que o produto tem SKUs
+        if (!item.items || item.items.length === 0) return false;
+        
+        // Obter disponibilidade do SKU padrão
+        const firstSku = item.items[0];
+        const offer = firstSku?.sellers?.[0]?.commertialOffer;
+        
+        if (!offer) return false;
+        
+        // Ignorar produtos fora de estoque / indisponíveis (evita lixo em cache)
+        if (offer.IsAvailable === false) return false;
+        if (offer.AvailableQuantity <= 0) return false;
+        if (offer.Price === null || offer.Price === undefined) return false;
+        
+        return true;
+      })
+      .map(item => {
+        const title = item.productName || '';
+        const link = item.link || '';
+        const description = item.metaTagDescription || item.description || 'Sem descrição detalhada.';
 
-      // Pegar SKU padrão (primeiro disponível)
-      const firstSku = item.items?.[0];
-      const image = firstSku?.images?.[0]?.imageUrl || '';
-      
-      // Preço Comercial
-      const priceVal = firstSku?.sellers?.[0]?.commertialOffer?.Price;
-      const price = priceVal ? `R$ ${priceVal.toFixed(2).replace('.', ',')}` : 'Sob Consulta';
+        // Pegar SKU padrão (primeiro disponível)
+        const firstSku = item.items[0];
+        const image = firstSku?.images?.[0]?.imageUrl || '';
+        
+        // Preço Comercial
+        const priceVal = firstSku?.sellers?.[0]?.commertialOffer?.Price;
+        const price = `R$ ${priceVal.toFixed(2).replace('.', ',')}`;
 
-      // Detalhes extras
-      const brand = item.brand || 'C&A';
-      const composition = item.Composição?.[0] || 'Algodão/Poliéster';
-      const characteristics = `Marca: ${brand} | Tecido: ${composition}`;
-      const Cor = item.Cor || [];
+        // Detalhes extras
+        const brand = item.brand || 'C&A';
+        const composition = item.Composição?.[0] || 'Algodão/Poliéster';
+        const characteristics = `Marca: ${brand} | Tecido: ${composition}`;
+        const Cor = item.Cor || [];
+        const Genero = item.Gênero || [];
+        const categories = item.categories || [];
 
-      return {
-        store: 'C&A',
-        title,
-        price,
-        numericPrice: priceVal || 0,
-        link,
-        image,
-        description,
-        characteristics,
-        Cor
-      };
-    });
+        return {
+          store: 'C&A',
+          title,
+          price,
+          numericPrice: priceVal,
+          link,
+          image,
+          description,
+          characteristics,
+          Cor,
+          Genero,
+          categories
+        };
+      });
 
   } catch (err) {
     console.error('[C&A] Erro ao buscar na API:', err.message);
@@ -198,7 +224,7 @@ app.get('/api/search', async (req, res) => {
     const page = req.query.page ? parseInt(req.query.page) : 1;
 
     const pageSize = 24;
-    const apiPageSize = 36; // Solicitamos um pouco mais para compensar o post-filtering de cor
+    const apiPageSize = 48; // Solicitamos um lote maior para compensar a filtragem dupla em memória (Cor + Gênero)
     const from = (page - 1) * pageSize;
     const to = from + apiPageSize - 1;
 
@@ -223,10 +249,47 @@ app.get('/api/search', async (req, res) => {
 
     const rawProducts = await searchCeA(fullQuery, gender, minPrice, maxPrice, size, color, sort, from, to);
 
-    // Filtragem pós-busca em memória para garantir precisão máxima de cor
+    // 1. Filtragem pós-busca em memória para garantir precisão máxima de cor
     let filteredProducts = rawProducts;
     if (color) {
       filteredProducts = rawProducts.filter(product => matchColor(product, color));
+    }
+
+    // 2. Filtragem pós-busca em memória para garantir precisão estrita de gênero (Evita menino retornar menina)
+    if (gender) {
+      filteredProducts = filteredProducts.filter(product => {
+        const productGenders = (product.Genero || []).map(g => g.toLowerCase());
+        const target = gender.toLowerCase();
+        
+        if (productGenders.length === 0) {
+          // Fallback: verificar se o título contém palavras restritivas do gênero oposto
+          const title = (product.title || '').toLowerCase();
+          if (target === 'menino' && (title.includes('menina') || title.includes('feminina') || title.includes('mulher'))) return false;
+          if (target === 'menina' && (title.includes('menino') || title.includes('masculina') || title.includes('homem'))) return false;
+          if (target === 'masculino' && (title.includes('feminina') || title.includes('feminino') || title.includes('mulher') || title.includes('infantil') || title.includes('menino') || title.includes('menina'))) return false;
+          if (target === 'feminino' && (title.includes('masculina') || title.includes('masculino') || title.includes('homem') || title.includes('infantil') || title.includes('menino') || title.includes('menina'))) return false;
+          return true;
+        }
+        
+        if (target === 'masculino') {
+          return productGenders.includes('masculino') || productGenders.includes('unissex') || productGenders.includes('homem');
+        }
+        if (target === 'feminino') {
+          return productGenders.includes('feminino') || productGenders.includes('unissex') || productGenders.includes('mulher');
+        }
+        if (target === 'menino') {
+          return productGenders.includes('menino') || productGenders.includes('unissex');
+        }
+        if (target === 'menina') {
+          return productGenders.includes('menina') || productGenders.includes('unissex');
+        }
+        if (target === 'bebe') {
+          const hasBabySpec = productGenders.includes('bebê') || productGenders.includes('bebe');
+          const hasBabyCategory = (product.categories || []).some(c => c.toLowerCase().includes('bebe') || c.toLowerCase().includes('bebê'));
+          return hasBabySpec || hasBabyCategory;
+        }
+        return true;
+      });
     }
 
     // Fatiar de acordo com o tamanho de página desejado
