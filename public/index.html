@@ -33,24 +33,29 @@
         <h2 class="section-title"><i class="fa-solid fa-sliders"></i> Filtros de Busca</h2>
         
         <form id="search-form">
-          <!-- Busca por produto -->
+          <!-- 1. Faixa de Preço (Min/Max com badges) -->
           <div class="input-group">
-            <label for="search-input">O que você procura na C&A?</label>
-            <div class="search-box">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="search-input" placeholder="Ex: camiseta, calça, vestido..." required>
+            <label>Faixa de Preço (R$)</label>
+            <div class="price-inputs-row">
+              <div class="price-input-box">
+                <span>Mínimo</span>
+                <input type="number" id="price-min" min="0" placeholder="0">
+              </div>
+              <div class="price-input-box">
+                <span>Máximo</span>
+                <input type="number" id="price-max" min="0" placeholder="Sem limite">
+              </div>
             </div>
-            <div class="quick-tags">
-              <span class="badge-tag" data-value="camiseta">Camisetas</span>
-              <span class="badge-tag" data-value="jeans">Jeans</span>
-              <span class="badge-tag" data-value="vestido">Vestidos</span>
-              <span class="badge-tag" data-value="casaco">Casacos</span>
-              <span class="badge-tag" data-value="short">Shorts</span>
-              <span class="badge-tag" data-value="blusa">Blusas</span>
+            <div class="price-quick-tags">
+              <span class="price-badge" data-min="39" data-max="40">R$ 39,90</span>
+              <span class="price-badge" data-min="49" data-max="50">R$ 49,90</span>
+              <span class="price-badge" data-min="59" data-max="60">R$ 59,90</span>
+              <span class="price-badge" data-min="0" data-max="40">Até R$ 40</span>
+              <span class="price-badge" data-min="0" data-max="50">Até R$ 50</span>
             </div>
           </div>
 
-          <!-- Gênero -->
+          <!-- 2. Gênero -->
           <div class="input-group">
             <label>Gênero / Categoria</label>
             <div class="gender-selector">
@@ -73,24 +78,56 @@
               <label for="gender-baby"><i class="fa-solid fa-baby"></i> Bebê</label>
             </div>
           </div>
-          <!-- Tamanho (Especificação 46) -->
+
+          <!-- 3. Tamanho (Especificação 46) -->
           <div class="input-group">
             <label>Tamanho</label>
-            <div class="size-selector-grid" id="size-selector">
+            
+            <div class="size-group-title">RN / Bebê (0 a 24 meses)</div>
+            <div class="size-selector-grid" id="size-selector-rn">
+              <span class="size-btn" data-value="RN">RN</span>
+              <span class="size-btn" data-value="0-3 meses,0-3">0-3M</span>
+              <span class="size-btn" data-value="3-6 meses,3-6">3-6M</span>
+              <span class="size-btn" data-value="6-9 meses,6-9">6-9M</span>
+              <span class="size-btn" data-value="9-12 meses,9-12">9-12M</span>
+              <span class="size-btn" data-value="12-18 meses,12-18">12-18M</span>
+              <span class="size-btn" data-value="18-24 meses,18-24">18-24M</span>
+            </div>
+
+            <div class="size-group-title">BBO (1 a 5 anos)</div>
+            <div class="size-selector-grid" id="size-selector-bbo">
+              <span class="size-btn" data-value="1">1</span>
+              <span class="size-btn" data-value="2">2</span>
+              <span class="size-btn" data-value="3">3</span>
+              <span class="size-btn" data-value="4">4</span>
+              <span class="size-btn" data-value="5">5</span>
+            </div>
+
+            <div class="size-group-title">Kids (4 a 12 anos)</div>
+            <div class="size-selector-grid" id="size-selector-kids">
+              <span class="size-btn" data-value="4">4</span>
+              <span class="size-btn" data-value="6">6</span>
+              <span class="size-btn" data-value="8">8</span>
+              <span class="size-btn" data-value="10">10</span>
+              <span class="size-btn" data-value="12">12</span>
+            </div>
+
+            <div class="size-group-title">Teen (10 a 16 anos)</div>
+            <div class="size-selector-grid" id="size-selector-teen">
+              <span class="size-btn" data-value="10">10</span>
+              <span class="size-btn" data-value="12">12</span>
+              <span class="size-btn" data-value="14">14</span>
+              <span class="size-btn" data-value="16">16</span>
+            </div>
+
+            <div class="size-group-title">Adulto</div>
+            <div class="size-selector-grid" id="size-selector-adult">
               <span class="size-btn" data-value="PP">PP</span>
               <span class="size-btn" data-value="P">P</span>
               <span class="size-btn" data-value="M">M</span>
               <span class="size-btn" data-value="G">G</span>
               <span class="size-btn" data-value="GG">GG</span>
-              <span class="size-btn size-kids" data-value="1">1</span>
-              <span class="size-btn size-kids" data-value="2">2</span>
-              <span class="size-btn size-kids" data-value="3">3</span>
-              <span class="size-btn size-kids" data-value="4">4</span>
-              <span class="size-btn size-kids" data-value="5">5</span>
-              <span class="size-btn size-kids" data-value="6">6</span>
-              <span class="size-btn size-kids" data-value="8">8</span>
-              <span class="size-btn size-kids" data-value="10">10</span>
-              <span class="size-btn size-kids" data-value="12">12</span>
+              <span class="size-btn" data-value="XG">XG</span>
               <span class="size-btn" data-value="36">36</span>
               <span class="size-btn" data-value="38">38</span>
               <span class="size-btn" data-value="40">40</span>
@@ -100,46 +137,31 @@
             </div>
           </div>
 
-          <!-- Faixa de Preço (Min/Max com badges) -->
+          <!-- 4. Tipo de Produto (Categorias) -->
           <div class="input-group">
-            <label>Faixa de Preço (R$)</label>
-            <div class="price-inputs-row">
-              <div class="price-input-box">
-                <span>Mínimo</span>
-                <input type="number" id="price-min" min="0" placeholder="0">
-              </div>
-              <div class="price-input-box">
-                <span>Máximo</span>
-                <input type="number" id="price-max" min="0" placeholder="Sem limite">
-              </div>
-            </div>
-            <div class="price-quick-tags">
-              <span class="price-badge" data-min="39" data-max="40">R$ 39,90</span>
-              <span class="price-badge" data-min="49" data-max="50">R$ 49,90</span>
-              <span class="price-badge" data-min="59" data-max="60">R$ 59,90</span>
-              <span class="price-badge" data-min="0" data-max="40">Até R$ 40</span>
-              <span class="price-badge" data-min="0" data-max="50">Até R$ 50</span>
+            <label>Tipo de Produto</label>
+            <div class="category-selector-grid" id="category-selector">
+              <span class="category-btn active" data-value="">Todos</span>
+              <span class="category-btn" data-value="camiseta">Camisetas</span>
+              <span class="category-btn" data-value="blusa">Blusas & Camisas</span>
+              <span class="category-btn" data-value="short">Shorts & Bermudas</span>
+              <span class="category-btn" data-value="calca">Calças</span>
+              <span class="category-btn" data-value="jeans">Jeans</span>
+              <span class="category-btn" data-value="vestido">Vestidos</span>
+              <span class="category-btn" data-value="conjunto">Conjuntos</span>
+              <span class="category-btn" data-value="casaco">Casacos & Jaquetas</span>
+              <span class="category-btn" data-value="saia">Saias</span>
+              <span class="category-btn" data-value="calcado">Calçados</span>
+              <span class="category-btn" data-value="pijama">Pijamas & Íntimo</span>
             </div>
           </div>
 
-          <!-- Categoria de Produto -->
+          <!-- 5. Busca Livre (Opcional) -->
           <div class="input-group">
-            <label for="category-select">Categoria de Produto</label>
-            <div class="category-box">
-              <i class="fa-solid fa-tags"></i>
-              <select id="category-select">
-                <option value="" selected>Todas as Categorias</option>
-                <option value="camiseta">Camisetas</option>
-                <option value="calca">Calças</option>
-                <option value="jeans">Jeans</option>
-                <option value="vestido">Vestidos</option>
-                <option value="casaco">Casacos & Jaquetas</option>
-                <option value="short">Shorts & Bermudas</option>
-                <option value="blusa">Blusas & Camisas</option>
-                <option value="saia">Saias</option>
-                <option value="calcado">Calçados</option>
-                <option value="pijama">Pijamas & Moda Íntima</option>
-              </select>
+            <label for="search-input">Busca Livre (Opcional)</label>
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-input" placeholder="Ex: disney, listrado, polo...">
             </div>
           </div>
 

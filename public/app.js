@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-input');
   const priceMinInput = document.getElementById('price-min');
   const priceMaxInput = document.getElementById('price-max');
-  const categorySelect = document.getElementById('category-select');
   const btnPrint = document.getElementById('btn-print');
   const productsGrid = document.getElementById('products-grid');
   
@@ -53,6 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Desmarcar badges de preço se o usuário digitar manualmente nos campos de preço
+  [priceMinInput, priceMaxInput].forEach(input => {
+    input.addEventListener('input', () => {
+      priceBadges.forEach(b => b.classList.remove('active'));
+    });
+  });
+
   // Evento do Botão Imprimir (PDF)
   if (btnPrint) {
     btnPrint.addEventListener('click', () => {
@@ -86,6 +92,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // --- CONTROLES DE CATEGORIA (Grade de Botões) ---
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.value;
+      if (val === '') {
+        // Se clicar em "Todos", ativa apenas "Todos" e desativa as outras
+        categoryBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      } else {
+        // Se clicar em qualquer outra categoria:
+        if (btn.classList.contains('active')) {
+          btn.classList.remove('active');
+          // Se nenhuma categoria estiver ativa, ativa "Todos"
+          const anyActive = Array.from(categoryBtns).some(b => b !== btn && b.dataset.value !== '' && b.classList.contains('active'));
+          if (!anyActive) {
+            document.querySelector('.category-btn[data-value=""]').classList.add('active');
+          }
+        } else {
+          // Desativa o botão "Todos" e ativa esta
+          document.querySelector('.category-btn[data-value=""]').classList.remove('active');
+          btn.classList.add('active');
+        }
+      }
+    });
+  });
+
   // --- CONTROLES DE BADGES RÁPIDAS (Tags) ---
   const badgeTags = document.querySelectorAll('.badge-tag');
   badgeTags.forEach(tag => {
@@ -113,14 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- BUSCAR PRODUTOS ---
   async function fetchProducts(append = false) {
     const query = searchInput.value.trim();
+    const minPrice = priceMinInput.value.trim();
+    const maxPrice = priceMaxInput.value.trim();
     
     // Obter filtros
     const genderEl = document.querySelector('input[name="gender"]:checked');
     const gender = genderEl ? genderEl.value : '';
     
-    const minPrice = priceMinInput.value.trim();
-    const maxPrice = priceMaxInput.value.trim();
-    const category = categorySelect ? categorySelect.value : '';
+    // Obter categorias ativas (ignorando o botão "Todos")
+    const activeCategoryBtns = document.querySelectorAll('.category-btn.active');
+    const selectedCategories = [];
+    activeCategoryBtns.forEach(btn => {
+      if (btn.dataset.value) {
+        selectedCategories.push(btn.dataset.value);
+      }
+    });
+    const category = selectedCategories.join(',');
     const sort = '';
 
     if (!append) {

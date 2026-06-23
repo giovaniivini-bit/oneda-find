@@ -21,7 +21,7 @@ async function searchCeA(query, targetGender, minPrice, maxPrice, size, color, s
   try {
     console.log(`[C&A API Call] Buscando query: "${query}", Gênero: "${targetGender}", Tamanho: "${size}", Preço: ${minPrice}-${maxPrice}, Ordenação: "${sort}", Itens: ${from}-${to}`);
 
-    const ft = query ? query : 'moda';
+    const ft = query ? query.trim() : '';
 
     // Montar os filtros (fq - Filter Query)
     const fqParts = [];
@@ -39,21 +39,24 @@ async function searchCeA(query, targetGender, minPrice, maxPrice, size, color, s
     }
 
     // Construir a URL da API da C&A baseada em VTEX
-    let url = `https://www.cea.com.br/api/catalog_system/pub/products/search?ft=${encodeURIComponent(ft)}`;
-    
+    let url = `https://www.cea.com.br/api/catalog_system/pub/products/search`;
+    const urlParams = [];
+
+    if (ft) {
+      urlParams.push(`ft=${encodeURIComponent(ft)}`);
+    }
     if (fqParts.length > 0) {
-      url += `&fq=${fqParts.join(',')}`;
+      urlParams.push(`fq=${fqParts.join(',')}`);
     }
-
-    // Ordenação (O)
     if (sort) {
-      url += `&O=${sort}`;
+      urlParams.push(`O=${sort}`);
     } else {
-      url += `&O=OrderByTopSaleDESC`; // Padrão: mais vendidos
+      urlParams.push(`O=OrderByTopSaleDESC`); // Padrão: mais vendidos
     }
+    urlParams.push(`_from=${from}`);
+    urlParams.push(`_to=${to}`);
 
-    // Paginação (_from e _to)
-    url += `&_from=${from}&_to=${to}`;
+    url += `?${urlParams.join('&')}`;
 
     console.log(`[C&A URL] ${url}`);
 
@@ -155,14 +158,9 @@ app.get('/api/search', async (req, res) => {
     const from = (page - 1) * pageSize;
     const to = from + apiPageSize - 1;
 
-    // Se o termo estiver vazio, usamos a categoria como termo principal.
-    // Se ambos estiverem vazios, usamos "moda" como padrão.
-    let searchTerm = query.trim();
-    if (!searchTerm) {
-      searchTerm = category ? category : 'moda';
-    } else if (category) {
-      searchTerm = `${searchTerm} ${category}`;
-    }
+    // Obter arrays de categorias e tamanhos
+    const categories = category.split(',').map(c => c.trim()).filter(Boolean);
+    const sizes = size.split(',').map(s => s.trim()).filter(Boolean);
 
     // Mapear o gênero para enriquecer a query de busca
     let genderTerm = '';
@@ -172,9 +170,39 @@ app.get('/api/search', async (req, res) => {
     else if (gender === 'menina') genderTerm = ' infantil menina';
     else if (gender === 'bebe') genderTerm = ' bebe';
 
-    const fullQuery = `${searchTerm}${genderTerm}`;
+    const activeCategories = categories.length > 0 ? categories : [''];
+    const activeSizes = sizes.length > 0 ? sizes : [''];
 
-    const rawProducts = await searchCeA(fullQuery, gender, minPrice, maxPrice, size, '', sort, from, to);
+    // Fazer buscas em paralelo para todas as combinações de categorias e tamanhos
+    const fetchPromises = [];
+    for (const cat of activeCategories) {
+      for (const sz of activeSizes) {
+        let searchTerm = query.trim();
+        if (cat) {
+          if (!searchTerm) {
+            searchTerm = cat;
+          } else {
+            searchTerm = `${searchTerm} ${cat}`;
+          }
+        }
+        const fullQuery = searchTerm ? `${searchTerm}${genderTerm}` : '';
+        fetchPromises.push(searchCeA(fullQuery, gender, minPrice, maxPrice, sz, '', sort, from, to));
+      }
+    }
+
+    const results = await Promise.all(fetchPromises);
+
+    // Mesclar os resultados e remover duplicados
+    const rawProducts = [];
+    const seenLinks = new Set();
+    for (const prodList of results) {
+      for (const prod of prodList) {
+        if (!seenLinks.has(prod.link)) {
+          seenLinks.add(prod.link);
+          rawProducts.push(prod);
+        }
+      }
+    }
 
     let filteredProducts = rawProducts;
 
